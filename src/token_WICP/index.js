@@ -3,7 +3,7 @@ import { Actor, HttpAgent } from '@dfinity/agent';
 // Imports and re-exports candid interface
 import { idlFactory } from './token_WICP.did.js';
 import logger from 'node-color-log';
-import { exec } from 'shelljs';
+import { exec, cd } from 'shelljs';
 
 export { idlFactory } from './token_WICP.did.js';
 // CANISTER_ID is replaced by webpack based on node environment
@@ -38,7 +38,7 @@ export const createActor = (canisterId, options) => {
 
 export const createLocalActorByName = (name) => {
   const canisterId = get_id(name);
-  return createActor(name, {
+  return createActor(canisterId, {
     agentOptions: { host: 'http://127.0.0.1:8000' },
   });
 };
@@ -51,5 +51,6 @@ export const createLocalActor = (canisterId) => {
 export const num_blocks_to_archive = 1000;
 
 export const get_id = (name) => {
+  cd(`/workspaces/ex3/src`);
   return exec(`dfx canister id ${name}`, { silent: true }).stdout.trim();
 };
