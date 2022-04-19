@@ -9,10 +9,15 @@ import {
   FeeToModifyDto,
   TransferDto,
 } from './models/dft.service.dto';
+import { SchedulerRegistry } from '@nestjs/schedule';
 
 @Injectable()
 export class DftService {
-  constructor(private prisma: PrismaService, private logger: Logger) {}
+  constructor(
+    private prisma: PrismaService,
+    private logger: Logger,
+    private schedulerRegistry: SchedulerRegistry,
+  ) {}
 
   getHello(): string {
     return 'Hello World!';
@@ -34,6 +39,36 @@ export class DftService {
         (key, value) => (typeof value === 'bigint' ? value.toString() : value), // return everything else unchanged
       ),
     );
+  }
+
+  async clearAndRestart() {
+    const jobs = this.schedulerRegistry.getCronJobs();
+    jobs.forEach((job) => {
+      job.stop();
+    });
+    await this.prisma.transfer.deleteMany({});
+    await this.prisma.balance.deleteMany({});
+
+    await this.prisma.tokenState.update({
+      where: {
+        name: 'token_WICP',
+      },
+      data: {
+        currentIndex: 0,
+      },
+    });
+    await this.prisma.tokenState.update({
+      where: {
+        name: 'token_WUSD',
+      },
+      data: {
+        currentIndex: 0,
+      },
+    });
+
+    jobs.forEach((job) => {
+      job.start();
+    });
   }
 
   async updateBalances(

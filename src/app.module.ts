@@ -5,10 +5,18 @@ import { DftService } from './dft.service';
 import { PrismaService } from './prisma.service';
 import { ScheduleModule } from '@nestjs/schedule';
 import { DftTasksService } from './dft.tasks.service';
+import { SchedulerRegistry } from '@nestjs/schedule';
 
 @Module({
   imports: [ScheduleModule.forRoot()],
   controllers: [AppController],
-  providers: [AppService, DftService, PrismaService, DftTasksService, Logger],
+  providers: [
+    AppService,
+    DftService,
+    PrismaService,
+    DftTasksService,
+    Logger,
+    SchedulerRegistry,
+  ],
 })
 export class AppModule {}
