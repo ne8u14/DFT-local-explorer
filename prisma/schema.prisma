@@ -1,0 +1,52 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+
+model Transfer {
+  id Int @default(autoincrement()) @id
+  height Int
+  blockHeight Int
+  createdAt BigInt
+  to String
+  from String
+  value String
+  fee BigInt
+  caller String
+  tokenName String
+}
+
+model Approve {
+  id Int @default(autoincrement()) @id
+  height Int
+  blockHeight Int
+  createdAt BigInt
+  fee BigInt
+  value String
+  owner String
+  caller String
+  spender String
+  tokenName String
+}
+
+
+model TokenState {
+  id Int @default(autoincrement()) @id
+  name String @unique
+  currentIndex Int
+}
+
+model Balance {
+  id Int @default(autoincrement()) @id
+  accountId String @unique
+  balance String
+  tokenName String
+}

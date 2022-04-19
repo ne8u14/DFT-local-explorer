@@ -3,7 +3,7 @@ import { Actor, HttpAgent } from '@dfinity/agent';
 // Imports and re-exports candid interface
 import { idlFactory } from './token_WICP.did.js';
 import logger from 'node-color-log';
-import { exec } from 'child_process';
+import { exec } from 'shelljs';
 
 export { idlFactory } from './token_WICP.did.js';
 // CANISTER_ID is replaced by webpack based on node environment

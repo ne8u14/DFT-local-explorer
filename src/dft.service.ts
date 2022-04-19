@@ -18,8 +18,15 @@ export class DftService {
     return 'Hello World!';
   }
 
-  async getTrades(canisterId: string): Promise<string> {
-    const res = await this.prisma.transfer.findMany();
+  async getTrades(tokenName: string): Promise<string> {
+    const res = await this.prisma.transfer.findMany({
+      where: {
+        tokenName,
+      },
+      orderBy: {
+        blockHeight: 'desc',
+      },
+    });
 
     return JSON.parse(
       JSON.stringify(

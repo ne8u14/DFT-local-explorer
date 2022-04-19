@@ -1,13 +1,10 @@
 {
-  "name": "dft-trades",
+  "name": "dft-blocklist",
   "version": "0.0.3",
   "description": "",
   "author": "",
   "private": false,
   "license": "UNLICENSED",
-  "bin": {
-    "dft-trades": "bin/dft-trades"
-  },
   "scripts": {
     "prebuild": "rimraf dist",
     "build": "nest build",
