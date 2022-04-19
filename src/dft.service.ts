@@ -41,6 +41,24 @@ export class DftService {
     );
   }
 
+  async getBalances(tokenName: string): Promise<string> {
+    const res = await this.prisma.balance.findMany({
+      where: {
+        tokenName,
+      },
+      orderBy: {
+        id: 'desc',
+      },
+    });
+
+    return JSON.parse(
+      JSON.stringify(
+        res,
+        (key, value) => (typeof value === 'bigint' ? value.toString() : value), // return everything else unchanged
+      ),
+    );
+  }
+
   async clearAndRestart() {
     const jobs = this.schedulerRegistry.getCronJobs();
     jobs.forEach((job) => {
