@@ -121,8 +121,8 @@ export class DftService {
       quoteStrings: '"',
       decimalSeparator: '.',
       showLabels: true,
-      showTitle: true,
-      title: 'My Balances CSV',
+      showTitle: false,
+      title: '',
       useTextFile: false,
       useBom: true,
       useKeysAsHeaders: true,
@@ -145,8 +145,8 @@ export class DftService {
       quoteStrings: '"',
       decimalSeparator: '.',
       showLabels: true,
-      showTitle: true,
-      title: 'My Balances CSV',
+      showTitle: false,
+      title: '',
       useTextFile: false,
       useBom: true,
       useKeysAsHeaders: true,
@@ -169,8 +169,8 @@ export class DftService {
       quoteStrings: '"',
       decimalSeparator: '.',
       showLabels: true,
-      showTitle: true,
-      title: 'My Balances CSV',
+      showTitle: false,
+      title: '',
       useTextFile: false,
       useBom: true,
       useKeysAsHeaders: true,
@@ -380,6 +380,7 @@ export class DftService {
     const count = Number(tokenInfo.blockHeight) - currentState.currentIndex - 1;
     await this.updateTrades(tokenName, currentState.currentIndex, count);
 
+    await this.exportAll();
     return;
   }
 

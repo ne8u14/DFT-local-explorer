@@ -17,8 +17,6 @@ export class DftTasksService {
       where: { name: 'token_WICP' },
     });
     await this.dftService.updateByCurrentState(currentState.name);
-
-    await this.dftService.exportAll();
   }
   @Cron(CronExpression.EVERY_5_SECONDS)
   async handleCron2() {
