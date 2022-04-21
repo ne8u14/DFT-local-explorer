@@ -17,6 +17,10 @@ export class DftTasksService {
       where: { name: 'token_WICP' },
     });
     await this.dftService.updateByCurrentState(currentState.name);
+
+    this.logger.debug(
+      'export link http://localhost:3000/getTransfersCSV?tokenName=token_WICP',
+    );
   }
   @Cron('5 * * * * *')
   async handleCron2() {
@@ -25,6 +29,8 @@ export class DftTasksService {
       where: { name: 'token_WUSD' },
     });
     await this.dftService.updateByCurrentState(currentState.name);
-    this.logger.debug('token_WUSD called when the current second is 5');
+    this.logger.debug(
+      'export link http://localhost:3000/getTransfersCSV?tokenName=token_WUSD',
+    );
   }
 }

@@ -7,6 +7,8 @@ import { Principal } from '@dfinity/principal';
 import { toHexString } from '@dfinity/identity/lib/cjs/buffer';
 import { get_dfx_json } from './dfxJson';
 import { get_id } from '../declarations/dft_basic';
+import { sha224 } from 'js-sha256';
+import crc from 'crc';
 
 export function load(name: string): Identity {
   //new_dfx_identity(name);
@@ -37,6 +39,7 @@ export interface IdentityInfo {
 }
 
 export interface CanisterInfo {
+  principal: Principal;
   name: string;
   principalText: string;
 }
@@ -86,7 +89,8 @@ class IdentityFactory {
     for (const canisterName of canisterNames) {
       const canisterInfo: CanisterInfo = {
         name: canisterName,
-        principalText: toHexString(get_id(canisterName)),
+        principalText: get_id(canisterName),
+        principal: Principal.fromText(get_id(canisterName)),
       };
 
       this._canisters.set(canisterName, canisterInfo);
@@ -137,13 +141,13 @@ class IdentityFactory {
     const pId = Principal.fromHex(id).toText();
     const principals = this.getPrincipals();
     const principal = principals.find(
-      (principal) => principal.principal.toText() === pId,
+      (principal) => principalToAccountID(principal.principal)=== pId,
     );
     //if principal is not found, find in canisters
     if (!principal) {
       const canisters = this.getCanisters();
       const canister = canisters.find(
-        (canister) => canister.principalText === pId,
+        (canister) => principalToAccountID(canister.principal) === pId,
       );
       if (canister) {
         return canister.name;
@@ -218,6 +222,41 @@ export const arrayOfNumberToArrayBuffer = (
   numbers: Array<number>,
 ): ArrayBuffer => {
   return arrayOfNumberToUint8Array(numbers).buffer;
+};
+
+export const principalToAccountIDInBytes = (
+  principal: Principal,
+  subAccount?: Uint8Array,
+): Uint8Array => {
+  // Hash (sha224) the principal, the subAccount and some padding
+  const padding = asciiStringToByteArray('\x0Aaccount-id');
+
+  const shaObj = sha224.create();
+  shaObj.update([
+    ...padding,
+    ...principal.toUint8Array(),
+    ...(subAccount ?? Array(32).fill(0)),
+  ]);
+  const hash = new Uint8Array(shaObj.array());
+
+  // Prepend the checksum of the hash and convert to a hex string
+  const checksum = calculateCrc32(hash);
+  return new Uint8Array([...checksum, ...hash]);
+};
+
+export const principalToAccountID = (
+  principal: Principal,
+  subAccount?: Uint8Array,
+): string => {
+  const bytes = principalToAccountIDInBytes(principal, subAccount);
+  return toHexString(bytes);
+};
+
+export const calculateCrc32 = (bytes: Uint8Array): Uint8Array => {
+  const checksumArrayBuf = new ArrayBuffer(4);
+  const view = new DataView(checksumArrayBuf);
+  view.setUint32(0, crc.crc32(Buffer.from(bytes)), false);
+  return Buffer.from(checksumArrayBuf);
 };
 
 export const identityFactory = new IdentityFactory();

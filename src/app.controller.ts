@@ -9,7 +9,7 @@ import {
 import { AppService } from './app.service';
 import { DftService } from './dft.service';
 import { Transfer } from '@prisma/client';
-import { createReadStream, writeFile } from 'fs';
+import { createReadStream, existsSync, mkdirSync, writeFile } from 'fs';
 import { Readable } from 'stream';
 
 @Controller()
@@ -35,6 +35,10 @@ export class AppController {
   @Get('getTransfersCSV?')
   async getTransfersCSV(@Query('tokenName') tokenName: string): Promise<any> {
     const data = await this.dftService.getTransfersCSV(tokenName);
+    const dir = process.cwd() + '/csv/transfers';
+    if (!existsSync(dir)) {
+      mkdirSync(dir, { recursive: true });
+    }
     writeFile(
       process.cwd() + `/transfers_${tokenName}.csv`,
       data,
@@ -51,6 +55,10 @@ export class AppController {
   @Get('getBalancesCSV?')
   async getBalancesCSV(@Query('tokenName') tokenName: string): Promise<void> {
     const data = await this.dftService.getBalancesCSV(tokenName);
+    const dir = process.cwd() + '/csv/transfers';
+    if (!existsSync(dir)) {
+      mkdirSync(dir, { recursive: true });
+    }
     writeFile(
       process.cwd() + `/balance_${tokenName}.csv`,
       data,
