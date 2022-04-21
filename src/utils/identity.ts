@@ -86,7 +86,7 @@ class IdentityFactory {
     for (const canisterName of canisterNames) {
       const canisterInfo: CanisterInfo = {
         name: canisterName,
-        principalText: get_id(canisterName),
+        principalText: toHexString(get_id(canisterName)),
       };
 
       this._canisters.set(canisterName, canisterInfo);
@@ -134,22 +134,23 @@ class IdentityFactory {
   };
 
   getNameById = (id: string): string => {
+    const pId = Principal.fromHex(id).toText();
     const principals = this.getPrincipals();
     const principal = principals.find(
-      (principal) => principal.principal.toText() === id,
+      (principal) => principal.principal.toText() === pId,
     );
     //if principal is not found, find in canisters
     if (!principal) {
       const canisters = this.getCanisters();
       const canister = canisters.find(
-        (canister) => canister.principalText === id,
+        (canister) => canister.principalText === pId,
       );
       if (canister) {
         return canister.name;
       }
     }
 
-    return principal.name;
+    return principal?.name;
   };
 
   getPrincipal = (name?: string): Principal | undefined => {
@@ -193,5 +194,32 @@ class IdentityFactory {
   };
 }
 
+export const asciiStringToByteArray = (text: string): Array<number> => {
+  return Array.from(text).map((c) => c.charCodeAt(0));
+};
+
+export const toHexString2 = (bytes: Uint8Array) =>
+  bytes.reduce((str, byte) => str + byte.toString(16).padStart(2, '0'), '');
+
+export const hexToBytes = (hex: string): Array<number> => {
+  const bytes = new Uint8Array(hex.length / 2);
+  for (let i = 0; i < hex.length; i += 2) {
+    bytes[i / 2] = parseInt(hex.substr(i, 2), 16);
+  }
+  return Array.from(bytes);
+};
+export const arrayOfNumberToUint8Array = (
+  numbers: Array<number>,
+): Uint8Array => {
+  return new Uint8Array(numbers);
+};
+
+export const arrayOfNumberToArrayBuffer = (
+  numbers: Array<number>,
+): ArrayBuffer => {
+  return arrayOfNumberToUint8Array(numbers).buffer;
+};
+
 export const identityFactory = new IdentityFactory();
 identityFactory.loadAllIdentities();
+identityFactory.loadAllCanisters();

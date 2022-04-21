@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { PrismaService } from './prisma.service';
+import { identityFactory } from "./utils/identity";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -14,6 +15,8 @@ async function bootstrap() {
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
+  identityFactory.loadAllIdentities();
+  identityFactory.loadAllCanisters();
 
   SwaggerModule.setup('api', app, document);
   await app.listen(3000);
@@ -22,10 +25,10 @@ async function bootstrap() {
 
   await prisma.tokenState.upsert({
     where: {
-      name: 'dft_basic',
+      name: 'token_WICP',
     },
     create: {
-      name: 'dft_basic',
+      name: 'token_WICP',
       currentIndex: 0,
     },
     update: {},

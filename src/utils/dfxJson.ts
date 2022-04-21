@@ -27,6 +27,7 @@ export class DfxJsonFile implements DfxJson {
 
   constructor(path = './dfx.json') {
     this.path = path ?? './dfx.json';
+    this.path = '/workspaces/ex3/src/dfx.json';
     this.load();
   }
 
@@ -91,6 +92,6 @@ export class FileDfxPackage implements DfxPackageJson {
 }
 
 export const get_dfx_package_json = (): DfxPackageJson => {
-  const json = fs.readFileSync('./dfx_package.json', 'utf8');
+  const json = fs.readFileSync('/workspaces/ex3/src/dfx_package.json', 'utf8');
   return new FileDfxPackage(json);
 };
