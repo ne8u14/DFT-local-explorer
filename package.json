@@ -6,7 +6,7 @@
   "private": false,
   "license": "UNLICENSED",
   "bin": {
-    "dft-blocklist": "bin/dft-blocklist"
+    "dft-blocklist": "bin/dft-blocklist.js"
   },
   "scripts": {
     "prebuild": "rimraf dist",
