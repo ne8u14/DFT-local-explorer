@@ -9,7 +9,7 @@ import {
 import { AppService } from './app.service';
 import { DftService } from './dft.service';
 import { Transfer } from '@prisma/client';
-import { createReadStream } from 'fs';
+import { createReadStream, writeFile } from 'fs';
 import { Readable } from 'stream';
 
 @Controller()
@@ -33,30 +33,36 @@ export class AppController {
   }
 
   @Get('getTransfersCSV?')
-  async getTransfersCSV(
-    @Query('tokenName') tokenName: string,
-    @Response({ passthrough: true }) res,
-  ): Promise<any> {
+  async getTransfersCSV(@Query('tokenName') tokenName: string): Promise<any> {
     const data = await this.dftService.getTransfersCSV(tokenName);
-    const buffer = Readable.from(data);
-    res.set({
-      'Content-Type': 'text/csv',
-      // 'Content-Disposition': 'attachment; filename=transfers.csv',
-    });
+    writeFile(
+      process.cwd() + `/transfers_${tokenName}.csv`,
+      data,
+      function (err) {
+        if (err) {
+          return console.error(err);
+        }
+        console.log('File created!');
+      },
+    );
 
     return data;
   }
   @Get('getBalancesCSV?')
-  async getBalancesCSV(
-    @Query('tokenName') tokenName: string,
-    @Response({ passthrough: true }) res,
-  ): Promise<StreamableFile> {
+  async getBalancesCSV(@Query('tokenName') tokenName: string): Promise<void> {
     const data = await this.dftService.getBalancesCSV(tokenName);
-    const buffer = Readable.from(data);
-    res.set({
-      'Content-Disposition': 'attachment; filename="Transfers.csv"',
-    });
-    return new StreamableFile(buffer);
+    writeFile(
+      process.cwd() + `/balance_${tokenName}.csv`,
+      data,
+      function (err) {
+        if (err) {
+          return console.error(err);
+        }
+        console.log('File created!');
+      },
+    );
+
+    return;
   }
 
   @Get('getOwner?')

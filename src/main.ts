@@ -2,7 +2,6 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { PrismaService } from './prisma.service';
-import { DftTasksService } from './dft.tasks.service';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -20,7 +19,6 @@ async function bootstrap() {
   await app.listen(3000);
 
   const prisma = app.get(PrismaService);
-  const tasksService = app.get(DftTasksService);
 
   await prisma.tokenState.upsert({
     where: {
