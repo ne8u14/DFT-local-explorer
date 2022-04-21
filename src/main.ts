@@ -24,10 +24,10 @@ async function bootstrap() {
 
   await prisma.tokenState.upsert({
     where: {
-      name: 'token_WICP',
+      name: 'dft_basic',
     },
     create: {
-      name: 'token_WICP',
+      name: 'dft_basic',
       currentIndex: 0,
     },
     update: {},

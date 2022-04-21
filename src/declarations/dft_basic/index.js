@@ -1,11 +1,11 @@
 import { Actor, HttpAgent } from '@dfinity/agent';
 
 // Imports and re-exports candid interface
-import { idlFactory } from './token_WICP.did.js';
+import { idlFactory } from './dft_basic.js';
 import logger from 'node-color-log';
 import { exec, cd } from 'shelljs';
 
-export { idlFactory } from './token_WICP.did.js';
+export { idlFactory } from './dft_basic.js';
 // CANISTER_ID is replaced by webpack based on node environment
 export const canisterId = process.env.DFT_BASIC_CANISTER_ID;
 global.fetch = require('node-fetch');
@@ -14,7 +14,7 @@ global.fetch = require('node-fetch');
  *
  * @param {string | import("@dfinity/principal").Principal} canisterId Canister ID of Agent
  * @param {{agentOptions?: import("@dfinity/agent").HttpAgentOptions; actorOptions?: import("@dfinity/agent").ActorConfig}} [options]
- * @return {import("@dfinity/agent").ActorSubclass<import("./token_WICP.did.js")._SERVICE>}
+ * @return {import("@dfinity/agent").ActorSubclass<import("./dft_basic.js")._SERVICE>}
  */
 export const createActor = (canisterId, options) => {
   const agent = new HttpAgent({ ...options?.agentOptions });
@@ -52,5 +52,7 @@ export const num_blocks_to_archive = 1000;
 
 export const get_id = (name) => {
   cd(`/workspaces/ex3/src`);
+  //get current nodejs process path
+  const path = exec('pwd', { silent: true }).stdout.trim();
   return exec(`dfx canister id ${name}`, { silent: true }).stdout.trim();
 };

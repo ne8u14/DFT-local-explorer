@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { createLocalActorByName as createLocalActorByName } from './token_WICP';
-import { BlockResult } from './token_WICP/token_WICP.did';
+import { createLocalActorByName as createLocalActorByName } from './declarations/dft_basic';
+import { BlockResult } from './declarations/dft_basic/dft_basic.did';
 import { PrismaService } from './prisma.service';
 import { type } from 'os';
 import { Transfer } from '@prisma/client';
@@ -10,6 +10,8 @@ import {
   TransferDto,
 } from './models/dft.service.dto';
 import { SchedulerRegistry } from '@nestjs/schedule';
+import { ExportToCsv } from 'export-to-csv';
+import { identityFactory } from './utils/identity';
 
 @Injectable()
 export class DftService {
@@ -19,11 +21,7 @@ export class DftService {
     private schedulerRegistry: SchedulerRegistry,
   ) {}
 
-  getHello(): string {
-    return 'Hello World!';
-  }
-
-  async getTrades(tokenName: string): Promise<string> {
+  async getTransfers(tokenName: string): Promise<string> {
     const res = await this.prisma.transfer.findMany({
       where: {
         tokenName,
@@ -39,6 +37,35 @@ export class DftService {
         (key, value) => (typeof value === 'bigint' ? value.toString() : value), // return everything else unchanged
       ),
     );
+  }
+  async getTransfersCSV(tokenName: string): Promise<any> {
+    const res = await this.prisma.transfer.findMany({
+      where: {
+        tokenName,
+      },
+      orderBy: {
+        blockHeight: 'desc',
+      },
+    });
+    const options = {
+      fieldSeparator: ',',
+      quoteStrings: '"',
+      decimalSeparator: '.',
+      showLabels: true,
+      showTitle: false,
+      title: '',
+      useTextFile: false,
+      useBom: true,
+      useKeysAsHeaders: true,
+      filename: 'Transfers.csv',
+    };
+    const csvExporter = new ExportToCsv(options);
+    if (res.length > 0) {
+      const data = csvExporter.generateCsv(res, true);
+      return data;
+    } else {
+      return 'No data found';
+    }
   }
 
   async getBalances(tokenName: string): Promise<string> {
@@ -58,6 +85,35 @@ export class DftService {
       ),
     );
   }
+  async getBalancesCSV(tokenName: string): Promise<any> {
+    const res = await this.prisma.balance.findMany({
+      where: {
+        tokenName,
+      },
+      orderBy: {
+        id: 'desc',
+      },
+    });
+
+    const options = {
+      fieldSeparator: ',',
+      quoteStrings: '"',
+      decimalSeparator: '.',
+      showLabels: true,
+      showTitle: true,
+      title: 'My Balances CSV',
+      useTextFile: false,
+      useBom: true,
+      useKeysAsHeaders: true,
+    };
+    const csvExporter = new ExportToCsv(options);
+    if (res.length > 0) {
+      const data = csvExporter.generateCsv(res, true);
+      return data;
+    } else {
+      return 'No data found';
+    }
+  }
 
   async clearAndRestart() {
     const jobs = this.schedulerRegistry.getCronJobs();
@@ -69,7 +125,7 @@ export class DftService {
 
     await this.prisma.tokenState.update({
       where: {
-        name: 'token_WICP',
+        name: 'dft_basic',
       },
       data: {
         currentIndex: 0,
@@ -106,6 +162,7 @@ export class DftService {
           accountId: accountId,
           balance: balance.toString(),
           tokenName: tokenName,
+          accountName: identityFactory.getNameById(accountId),
         },
       });
 
@@ -130,7 +187,7 @@ export class DftService {
       where: { name: tokenName },
     });
 
-    const transfers = operationObjects
+    const transfers: TransferDto[] = operationObjects
       .map((op, index) => {
         if ('Transfer' in op.operation) {
           const transfer = op.operation.Transfer;
@@ -141,12 +198,13 @@ export class DftService {
         }
       })
       .filter((x) => x !== undefined);
+
     for (const tr of transfers) {
       await this.prisma.transfer.create({
         data: {
-          from: tr.from,
-          to: tr.to,
-          caller: tr.caller,
+          from: identityFactory.getNameById(tr.from),
+          to: identityFactory.getNameById(tr.to),
+          caller: identityFactory.getNameById(tr.caller),
           value: tr.value.toString(),
           fee: tr.fee,
           createdAt: tr.createAt,
@@ -157,10 +215,9 @@ export class DftService {
       });
     }
 
-    await this.updateBalances(
-      tokenName,
-      transfers.map((x) => x.caller),
-    );
+    await this.updateBalances(tokenName, [
+      ...new Set(transfers.map((x) => x.caller)),
+    ]);
     currentState.currentIndex += operationObjects.length;
     await this.prisma.tokenState.update({
       where: { id: currentState.id },
@@ -199,7 +256,6 @@ export class DftService {
     }
 
     const count = Number(tokenInfo.blockHeight) - currentState.currentIndex - 1;
-    const pageSize = 100;
     await this.updateTrades(tokenName, currentState.currentIndex, count);
 
     return 'empty';

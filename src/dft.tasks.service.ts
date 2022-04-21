@@ -12,9 +12,9 @@ export class DftTasksService {
 
   @Cron(CronExpression.EVERY_30_SECONDS)
   async handleCron1() {
-    this.logger.debug('token_WICP called when the current second is 30');
+    this.logger.debug('dft_basic called when the current second is 30');
     const currentState = await this.prisma.tokenState.findFirst({
-      where: { name: 'token_WICP' },
+      where: { name: 'dft_basic' },
     });
     await this.dftService.updateByCurrentState(currentState.name);
   }
@@ -25,5 +25,6 @@ export class DftTasksService {
       where: { name: 'token_WUSD' },
     });
     await this.dftService.updateByCurrentState(currentState.name);
+    this.logger.debug('token_WUSD called when the current second is 30');
   }
 }

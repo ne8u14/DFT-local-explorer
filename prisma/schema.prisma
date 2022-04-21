@@ -47,6 +47,7 @@ model TokenState {
 model Balance {
   id Int @default(autoincrement()) @id
   accountId String @unique
+  accountName String @unique
   balance String
   tokenName String
 }
