@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { createLocalActorByName as createLocalActorByName } from './declarations/dft_basic';
 import { PrismaService } from './prisma.service';
 
-import { TransferDto } from './models/dft.service.dto';
+import { ApproveDto, TransferDto } from './models/dft.service.dto';
 import { SchedulerRegistry } from '@nestjs/schedule';
 import { ExportToCsv } from 'export-to-csv';
 import { identityFactory } from './utils/identity';
@@ -142,7 +142,7 @@ export class DftService {
   async updateBalances(
     tokenName: string,
     accountIdList: string[],
-  ): Promise<string> {
+  ): Promise<void> {
     const actor = createLocalActorByName(tokenName);
     for (const accountId of accountIdList) {
       const balance = await actor.balanceOf(accountId);
@@ -163,7 +163,7 @@ export class DftService {
       this.logger.debug(`${accountId} has ${balance}`);
     }
 
-    return 'empty';
+    return;
   }
 
   async updateTrades(
@@ -193,6 +193,18 @@ export class DftService {
       })
       .filter((x) => x !== undefined);
 
+    const approves: ApproveDto[] = operationObjects
+      .map((op, index) => {
+        if ('Approve' in op.operation) {
+          const approve = op.operation.Approve;
+          const a = approve as ApproveDto;
+          a.createAt = op.createdAt;
+          a.height = index;
+          return a;
+        }
+      })
+      .filter((x) => x !== undefined);
+
     for (const tr of transfers) {
       await this.prisma.transfer.create({
         data: {
@@ -209,9 +221,27 @@ export class DftService {
       });
     }
 
+    for (const ap of approves) {
+      await this.prisma.approve.create({
+        data: {
+          owner: identityFactory.getNameById(ap.owner),
+          spender: identityFactory.getNameById(ap.spender),
+          caller: identityFactory.getPrincipalNameById(ap.caller.toText()),
+          value: ap.value.toString(),
+          fee: ap.fee,
+          createdAt: ap.createAt,
+          height: ap.height,
+          blockHeight: start + ap.height,
+          tokenName: tokenName,
+        },
+      });
+    }
+
     const updateAccouts = transfers.map((tr) => tr.caller);
     updateAccouts.push(...transfers.map((tr) => tr.from));
     updateAccouts.push(...transfers.map((tr) => tr.to));
+    // updateAccouts.push(...approves.map((ap) => ap.owner));
+    // updateAccouts.push(...approves.map((ap) => ap.spender));
 
     await this.updateBalances(tokenName, updateAccouts);
     currentState.currentIndex += operationObjects.length;
@@ -220,10 +250,10 @@ export class DftService {
       data: { currentIndex: currentState.currentIndex },
     });
 
-    return 'empty';
+    return;
   }
 
-  async clearAndUpdate(tokenName: string): Promise<string> {
+  async clearAndUpdate(tokenName: string): Promise<void> {
     const actor = createLocalActorByName(tokenName);
     await this.clearDatabase();
     const blockInfo = await actor.blocksByQuery(BigInt(0), BigInt(0));
@@ -237,10 +267,10 @@ export class DftService {
       await this.updateTrades(tokenName, page, pageSize);
     }
 
-    return 'empty';
+    return;
   }
 
-  async updateByCurrentState(tokenName: string): Promise<string> {
+  async updateByCurrentState(tokenName: string): Promise<void> {
     const actor = createLocalActorByName(tokenName);
     const currentState = await this.prisma.tokenState.findFirst({
       where: { name: tokenName },
@@ -248,13 +278,13 @@ export class DftService {
     const tokenInfo = await actor.tokenInfo();
 
     if (Number(tokenInfo.blockHeight) - 1 <= currentState.currentIndex) {
-      return 'empty';
+      return;
     }
 
     const count = Number(tokenInfo.blockHeight) - currentState.currentIndex - 1;
     await this.updateTrades(tokenName, currentState.currentIndex, count);
 
-    return 'empty';
+    return;
   }
 
   async clearDatabase() {

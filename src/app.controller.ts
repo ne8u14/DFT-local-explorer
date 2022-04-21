@@ -30,16 +30,12 @@ export class AppController {
     if (!existsSync(dir)) {
       mkdirSync(dir, { recursive: true });
     }
-    writeFile(
-      process.cwd() + `/transfers_${tokenName}.csv`,
-      data,
-      function (err) {
-        if (err) {
-          return console.error(err);
-        }
-        console.log('File created!');
-      },
-    );
+    writeFile(dir + `/transfers_${tokenName}.csv`, data, function (err) {
+      if (err) {
+        return console.error(err);
+      }
+      console.log('File created!');
+    });
 
     return data;
   }
@@ -50,16 +46,12 @@ export class AppController {
     if (!existsSync(dir)) {
       mkdirSync(dir, { recursive: true });
     }
-    writeFile(
-      process.cwd() + `/balance_${tokenName}.csv`,
-      data,
-      function (err) {
-        if (err) {
-          return console.error(err);
-        }
-        console.log('File created!');
-      },
-    );
+    writeFile(dir + `/balance_${tokenName}.csv`, data, function (err) {
+      if (err) {
+        return console.error(err);
+      }
+      console.log('File created!');
+    });
 
     return;
   }

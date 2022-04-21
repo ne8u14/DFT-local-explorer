@@ -138,23 +138,31 @@ class IdentityFactory {
   };
 
   getNameById = (id: string): string => {
-    const pId = Principal.fromHex(id).toText();
     const principals = this.getPrincipals();
     const principal = principals.find(
-      (principal) => principalToAccountID(principal.principal) === pId,
+      (principal) => principalToAccountID(principal.principal) === id,
     );
     //if principal is not found, find in canisters
     if (!principal) {
       const canisters = this.getCanisters();
       const canister = canisters.find(
-        (canister) => principalToAccountID(canister.principal) === pId,
+        (canister) => principalToAccountID(canister.principal) === id,
       );
       if (canister) {
         return canister.name;
       }
     }
 
-    return principal?.name;
+    return principal?.name ?? id;
+  };
+
+  getPrincipalNameById = (id: string): string => {
+    const principals = this.getPrincipals();
+    const principal = principals.find(
+      (principal) => principalToAccountID(principal.principal) === id,
+    );
+
+    return principal?.name ?? id;
   };
 
   getPrincipal = (name?: string): Principal | undefined => {
