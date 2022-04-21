@@ -125,7 +125,7 @@ export class DftService {
 
     await this.prisma.tokenState.update({
       where: {
-        name: 'dft_basic',
+        name: 'token_WICP',
       },
       data: {
         currentIndex: 0,

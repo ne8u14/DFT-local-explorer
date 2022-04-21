@@ -2,7 +2,7 @@ import { exec } from 'shelljs';
 import { Identity } from '@dfinity/agent';
 import * as fs from 'fs';
 import { Secp256k1KeyIdentity } from '@dfinity/identity';
-import sha256 from 'sha256';
+import * as sha256 from 'sha256';
 import { Principal } from '@dfinity/principal';
 import { toHexString } from '@dfinity/identity/lib/cjs/buffer';
 import { get_dfx_json } from './dfxJson';
