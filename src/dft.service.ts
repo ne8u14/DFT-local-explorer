@@ -209,9 +209,11 @@ export class DftService {
       });
     }
 
-    await this.updateBalances(tokenName, [
-      ...new Set(transfers.map((x) => x.caller)),
-    ]);
+    const updateAccouts = transfers.map((tr) => tr.caller);
+    updateAccouts.push(...transfers.map((tr) => tr.from));
+    updateAccouts.push(...transfers.map((tr) => tr.to));
+
+    await this.updateBalances(tokenName, updateAccouts);
     currentState.currentIndex += operationObjects.length;
     await this.prisma.tokenState.update({
       where: { id: currentState.id },
