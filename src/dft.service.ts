@@ -1,14 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { createLocalActorByName as createLocalActorByName } from './declarations/dft_basic';
-import { BlockResult } from './declarations/dft_basic/dft_basic.did';
 import { PrismaService } from './prisma.service';
-import { type } from 'os';
-import { Transfer } from '@prisma/client';
-import {
-  ApproveDto,
-  FeeToModifyDto,
-  TransferDto,
-} from './models/dft.service.dto';
+
+import { TransferDto } from './models/dft.service.dto';
 import { SchedulerRegistry } from '@nestjs/schedule';
 import { ExportToCsv } from 'export-to-csv';
 import { identityFactory } from './utils/identity';

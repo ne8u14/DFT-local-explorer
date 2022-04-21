@@ -1,16 +1,7 @@
-import {
-  Controller,
-  Get,
-  Query,
-  Res,
-  StreamableFile,
-  Response,
-} from '@nestjs/common';
+import { Controller, Get, Query } from '@nestjs/common';
 import { AppService } from './app.service';
 import { DftService } from './dft.service';
-import { Transfer } from '@prisma/client';
-import { createReadStream, existsSync, mkdirSync, writeFile } from 'fs';
-import { Readable } from 'stream';
+import { existsSync, mkdirSync, writeFile } from 'fs';
 
 @Controller()
 export class AppController {

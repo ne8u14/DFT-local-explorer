@@ -6,7 +6,6 @@ import { PrismaService } from './prisma.service';
 import { ScheduleModule } from '@nestjs/schedule';
 import { DftTasksService } from './dft.tasks.service';
 import { SchedulerRegistry } from '@nestjs/schedule';
-import configuration from './config/configuration';
 @Module({
   imports: [ScheduleModule.forRoot()],
   controllers: [AppController],

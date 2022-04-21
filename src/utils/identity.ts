@@ -141,7 +141,7 @@ class IdentityFactory {
     const pId = Principal.fromHex(id).toText();
     const principals = this.getPrincipals();
     const principal = principals.find(
-      (principal) => principalToAccountID(principal.principal)=== pId,
+      (principal) => principalToAccountID(principal.principal) === pId,
     );
     //if principal is not found, find in canisters
     if (!principal) {
