@@ -1,11 +1,12 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { createLocalActorByName as createLocalActorByName } from './declarations/dft_basic';
-import { PrismaService } from './prisma.service';
+import { Injectable, Logger } from "@nestjs/common";
+import { createLocalActorByName as createLocalActorByName } from "./declarations/dft_basic";
+import { PrismaService } from "./prisma.service";
 
-import { ApproveDto, TransferDto } from './models/dft.service.dto';
-import { SchedulerRegistry } from '@nestjs/schedule';
-import { ExportToCsv } from 'export-to-csv';
-import { identityFactory } from './utils/identity';
+import { ApproveDto, TransferDto } from "./models/dft.service.dto";
+import { SchedulerRegistry } from "@nestjs/schedule";
+import { ExportToCsv } from "export-to-csv";
+import { identityFactory } from "./utils/identity";
+import { existsSync, mkdirSync, writeFile } from "fs";
 
 @Injectable()
 export class DftService {
@@ -107,6 +108,101 @@ export class DftService {
     } else {
       return 'No data found';
     }
+  }
+
+  async getAllTransfers(): Promise<any> {
+    const res = await this.prisma.transfer.findMany({
+      orderBy: {
+        blockHeight: 'desc',
+      },
+    });
+    const options = {
+      fieldSeparator: ',',
+      quoteStrings: '"',
+      decimalSeparator: '.',
+      showLabels: true,
+      showTitle: true,
+      title: 'My Balances CSV',
+      useTextFile: false,
+      useBom: true,
+      useKeysAsHeaders: true,
+    };
+    const csvExporter = new ExportToCsv(options);
+    if (res.length > 0) {
+      return csvExporter.generateCsv(res, true);
+    } else {
+      return 'No data found';
+    }
+  }
+  async getAllBalances(): Promise<any> {
+    const res = await this.prisma.balance.findMany({
+      orderBy: {
+        id: 'desc',
+      },
+    });
+    const options = {
+      fieldSeparator: ',',
+      quoteStrings: '"',
+      decimalSeparator: '.',
+      showLabels: true,
+      showTitle: true,
+      title: 'My Balances CSV',
+      useTextFile: false,
+      useBom: true,
+      useKeysAsHeaders: true,
+    };
+    const csvExporter = new ExportToCsv(options);
+    if (res.length > 0) {
+      return csvExporter.generateCsv(res, true);
+    } else {
+      return 'No data found';
+    }
+  }
+  async getAllApproves(): Promise<any> {
+    const res = await this.prisma.approve.findMany({
+      orderBy: {
+        blockHeight: 'desc',
+      },
+    });
+    const options = {
+      fieldSeparator: ',',
+      quoteStrings: '"',
+      decimalSeparator: '.',
+      showLabels: true,
+      showTitle: true,
+      title: 'My Balances CSV',
+      useTextFile: false,
+      useBom: true,
+      useKeysAsHeaders: true,
+    };
+    const csvExporter = new ExportToCsv(options);
+    if (res.length > 0) {
+      return csvExporter.generateCsv(res, true);
+    } else {
+      return 'No data found';
+    }
+  }
+
+  async exportAll(): Promise<void> {
+    const transfers = await this.getAllTransfers();
+    await this.export('transfers', transfers);
+    const balances = await this.getAllBalances();
+    await this.export('balances', balances);
+    const approves = await this.getAllApproves();
+    await this.export('approves', approves);
+  }
+
+  async export(name: string, data: any): Promise<void> {
+    const dir = process.cwd() + `/csv/${name}`;
+    if (!existsSync(dir)) {
+      mkdirSync(dir, { recursive: true });
+    }
+    writeFile(dir + `/${name}.csv`, data, function (err) {
+      if (err) {
+        return console.error(err);
+      }
+      console.log('File created!');
+    });
   }
 
   async clearAndRestart() {
