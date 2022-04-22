@@ -4,6 +4,7 @@ import { Actor, HttpAgent } from '@dfinity/agent';
 import { idlFactory } from './dft_basic.js';
 import logger from 'node-color-log';
 import { exec, cd } from 'shelljs';
+import { get_id } from '../utils';
 
 export { idlFactory } from './dft_basic.js';
 // CANISTER_ID is replaced by webpack based on node environment
