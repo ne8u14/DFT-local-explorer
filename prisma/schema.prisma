@@ -42,6 +42,7 @@ model TokenState {
   id Int @default(autoincrement()) @id
   name String @unique
   currentIndex Int
+  version BigInt @default(0)
 }
 
 model Balance {

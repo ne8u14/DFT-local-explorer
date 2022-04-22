@@ -1,12 +1,14 @@
-import { Injectable, Logger } from "@nestjs/common";
-import { createLocalActorByName as createLocalActorByName } from "./declarations/dft_basic";
-import { PrismaService } from "./prisma.service";
+import { Injectable, Logger } from '@nestjs/common';
+import { createLocalActorByName as createBasicLocalActorByName } from './declarations/dft_basic';
+import { createLocalActorByName as createFusionLocalActorByName } from './declarations/fusion';
+import { createLocalActorByName as createBalanceKeeperLocalActorByName } from './declarations/balance_keeper';
+import { PrismaService } from './prisma.service';
 
-import { ApproveDto, TransferDto } from "./models/dft.service.dto";
-import { SchedulerRegistry } from "@nestjs/schedule";
-import { ExportToCsv } from "export-to-csv";
-import { identityFactory } from "./utils/identity";
-import { existsSync, mkdirSync, writeFile } from "fs";
+import { ApproveDto, TransferDto } from './models/dft.service.dto';
+import { SchedulerRegistry } from '@nestjs/schedule';
+import { ExportToCsv } from 'export-to-csv';
+import { identityFactory } from './utils/identity';
+import { existsSync, mkdirSync, writeFile } from 'fs';
 
 @Injectable()
 export class DftService {
@@ -239,7 +241,7 @@ export class DftService {
     tokenName: string,
     accountIdList: string[],
   ): Promise<void> {
-    const actor = createLocalActorByName(tokenName);
+    const actor = createBasicLocalActorByName(tokenName);
     for (const accountId of accountIdList) {
       const balance = await actor.balanceOf(accountId);
 
@@ -258,8 +260,26 @@ export class DftService {
 
       this.logger.debug(`${accountId} has ${balance}`);
     }
+  }
 
-    return;
+  async updateAllBalances(tokenName: string): Promise<void> {
+    const actor = createBasicLocalActorByName(tokenName);
+    const balances = await this.prisma.balance.findMany({
+      where: {
+        tokenName: tokenName,
+      },
+    });
+    for (const balance of balances) {
+      const accountId = balance.accountId;
+      const balance2 = await actor.balanceOf(accountId);
+      await this.prisma.balance.update({
+        where: { accountId: accountId },
+        data: {
+          balance: balance2.toString(),
+        },
+      });
+      this.logger.debug(`${accountId} has ${balance2}`);
+    }
   }
 
   async updateTrades(
@@ -267,7 +287,7 @@ export class DftService {
     start: number,
     count: number,
   ): Promise<string> {
-    const actor = createLocalActorByName(tokenName);
+    const actor = createBasicLocalActorByName(tokenName);
 
     const res = await actor.blocksByQuery(BigInt(start), BigInt(count));
 
@@ -350,7 +370,7 @@ export class DftService {
   }
 
   async clearAndUpdate(tokenName: string): Promise<void> {
-    const actor = createLocalActorByName(tokenName);
+    const actor = createBasicLocalActorByName(tokenName);
     await this.clearDatabase();
     const blockInfo = await actor.blocksByQuery(BigInt(0), BigInt(0));
     const tokenInfo = await actor.tokenInfo();
@@ -367,7 +387,7 @@ export class DftService {
   }
 
   async updateByCurrentState(tokenName: string): Promise<void> {
-    const actor = createLocalActorByName(tokenName);
+    const actor = createBasicLocalActorByName(tokenName);
     const currentState = await this.prisma.tokenState.findFirst({
       where: { name: tokenName },
     });
@@ -390,12 +410,47 @@ export class DftService {
   }
 
   async getOwner(tokenName: string): Promise<string> {
-    const actor = createLocalActorByName(tokenName);
+    const actor = createBasicLocalActorByName(tokenName);
     const res = await actor.owner();
 
     const pText = res.toText();
 
     return pText;
+  }
+
+  async checkBalanceKeeperVerion(): Promise<boolean> {
+    const fusionActor = createFusionLocalActorByName('fusion');
+    const balanceKeeperActor = createBalanceKeeperLocalActorByName('balance');
+    const state = await this.prisma.tokenState.findFirst({
+      where: { name: 'fusion' },
+    });
+    const fusionRes = await fusionActor.version();
+    const balanceKeeperRes = await balanceKeeperActor.version();
+    //get res
+    const fusionVersionRes = fusionRes as {
+      Ok: bigint;
+    };
+    const balanceKeeperVersionRes = balanceKeeperRes as {
+      Ok: bigint;
+    };
+
+    if (fusionVersionRes === undefined) {
+      return false;
+    }
+    if (fusionVersionRes.Ok.toString() === state.currentIndex.toString()) {
+      return false;
+    }
+    if (
+      balanceKeeperVersionRes.Ok.toString() !== fusionVersionRes.Ok.toString()
+    ) {
+      return false;
+    }
+
+    await this.prisma.tokenState.update({
+      where: { name: 'fusion' },
+      data: { version: fusionVersionRes.Ok },
+    });
+    return true;
   }
 
   async tryGetBlock(canisterId: string): Promise<string> {

@@ -1,20 +1,19 @@
 import { Actor, HttpAgent } from '@dfinity/agent';
 
 // Imports and re-exports candid interface
-import { idlFactory } from './dft_basic.js';
+import { idlFactory } from './fusion.did.js';
 import logger from 'node-color-log';
-import { exec, cd } from 'shelljs';
+import { get_id } from '../dft_basic';
 
-export { idlFactory } from './dft_basic.js';
+export { idlFactory } from './fusion.did.js';
 // CANISTER_ID is replaced by webpack based on node environment
-export const canisterId = process.env.DFT_BASIC_CANISTER_ID;
-global.fetch = require('node-fetch');
+export const canisterId = process.env.FUSION_CANISTER_ID;
 
 /**
  *
  * @param {string | import("@dfinity/principal").Principal} canisterId Canister ID of Agent
  * @param {{agentOptions?: import("@dfinity/agent").HttpAgentOptions; actorOptions?: import("@dfinity/agent").ActorConfig}} [options]
- * @return {import("@dfinity/agent").ActorSubclass<import("./dft_basic.js")._SERVICE>}
+ * @return {import("@dfinity/agent").ActorSubclass<import("./fusion.did.js")._SERVICE>}
  */
 export const createActor = (canisterId, options) => {
   const agent = new HttpAgent({ ...options?.agentOptions });
@@ -42,10 +41,3 @@ export const createLocalActorByName = (name) => {
     agentOptions: { host: 'http://127.0.0.1:8000' },
   });
 };
-export const createLocalActor = (canisterId) => {
-  return createActor(canisterId, {
-    agentOptions: { host: 'http://127.0.0.1:8000' },
-  });
-};
-
-export const num_blocks_to_archive = 1000;

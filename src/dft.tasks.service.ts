@@ -26,4 +26,12 @@ export class DftTasksService {
     });
     await this.dftService.updateByCurrentState(currentState.name);
   }
+  @Cron(CronExpression.EVERY_5_SECONDS)
+  async handleUpdateBalance() {
+    if (await this.dftService.checkBalanceKeeperVerion()) {
+      await this.dftService.updateAllBalances('token_WICP');
+      await this.dftService.updateAllBalances('token_WUSD');
+      await this.dftService.exportAll();
+    }
+  }
 }

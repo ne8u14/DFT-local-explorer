@@ -6,9 +6,9 @@ import * as sha256 from 'sha256';
 import { Principal } from '@dfinity/principal';
 import { toHexString } from '@dfinity/identity/lib/cjs/buffer';
 import { get_dfx_json } from './dfxJson';
-import { get_id } from '../declarations/dft_basic';
 import { sha224 } from 'js-sha256';
 import crc from 'crc';
+import { get_id, principalToAccountID } from '../declarations/utils';
 
 export function load(name: string): Identity {
   //new_dfx_identity(name);
@@ -205,67 +205,6 @@ class IdentityFactory {
     return subAccount;
   };
 }
-
-export const asciiStringToByteArray = (text: string): Array<number> => {
-  return Array.from(text).map((c) => c.charCodeAt(0));
-};
-
-export const toHexString2 = (bytes: Uint8Array) =>
-  bytes.reduce((str, byte) => str + byte.toString(16).padStart(2, '0'), '');
-
-export const hexToBytes = (hex: string): Array<number> => {
-  const bytes = new Uint8Array(hex.length / 2);
-  for (let i = 0; i < hex.length; i += 2) {
-    bytes[i / 2] = parseInt(hex.substr(i, 2), 16);
-  }
-  return Array.from(bytes);
-};
-export const arrayOfNumberToUint8Array = (
-  numbers: Array<number>,
-): Uint8Array => {
-  return new Uint8Array(numbers);
-};
-
-export const arrayOfNumberToArrayBuffer = (
-  numbers: Array<number>,
-): ArrayBuffer => {
-  return arrayOfNumberToUint8Array(numbers).buffer;
-};
-
-export const principalToAccountIDInBytes = (
-  principal: Principal,
-  subAccount?: Uint8Array,
-): Uint8Array => {
-  // Hash (sha224) the principal, the subAccount and some padding
-  const padding = asciiStringToByteArray('\x0Aaccount-id');
-
-  const shaObj = sha224.create();
-  shaObj.update([
-    ...padding,
-    ...principal.toUint8Array(),
-    ...(subAccount ?? Array(32).fill(0)),
-  ]);
-  const hash = new Uint8Array(shaObj.array());
-
-  // Prepend the checksum of the hash and convert to a hex string
-  const checksum = calculateCrc32(hash);
-  return new Uint8Array([...checksum, ...hash]);
-};
-
-export const principalToAccountID = (
-  principal: Principal,
-  subAccount?: Uint8Array,
-): string => {
-  const bytes = principalToAccountIDInBytes(principal, subAccount);
-  return toHexString(bytes);
-};
-
-export const calculateCrc32 = (bytes: Uint8Array): Uint8Array => {
-  const checksumArrayBuf = new ArrayBuffer(4);
-  const view = new DataView(checksumArrayBuf);
-  view.setUint32(0, crc.crc32(Buffer.from(bytes)), false);
-  return Buffer.from(checksumArrayBuf);
-};
 
 export const identityFactory = new IdentityFactory();
 identityFactory.loadAllIdentities();
